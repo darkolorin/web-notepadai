@@ -1,0 +1,284 @@
+:root {
+    /* --- Colors --- */
+    /* Base */
+    --bg-color: #181a1f; /* Slightly darker base */
+    --sidebar-bg: #1f2126; /* Sidebar distinct background */
+    --primary-text-color: #d1d5db; /* Lighter grey for primary text */
+    --secondary-text-color: #9ca3af; /* Muted grey for secondary info */
+    --border-color: #374151; /* More visible, but still subtle border */
+    /* Inputs & Text Area */
+    --input-bg-color: #252830;
+    --input-text-color: var(--primary-text-color);
+    --input-border-color: #4b5563;
+    --input-focus-border-color: var(--accent-color);
+    /* Buttons */
+    --button-bg-color: #374151; /* Muted background */
+    --button-text-color: var(--primary-text-color);
+    --button-hover-bg-color: #4b5563;
+    --button-disabled-bg-color: #2b2e36;
+    --button-disabled-text-color: var(--secondary-text-color);
+    /* Accent */
+    --accent-color: #6366f1; /* Indigo accent */
+    --accent-hover-color: #4f46e5;
+    /* Note List */
+    --note-list-item-hover-bg: #2b2e36;
+    --note-list-item-active-bg: #374151;
+    --note-list-item-active-text: #ffffff;
+
+    /* --- Sizing & Spacing --- */
+    --sidebar-width: 240px;
+    --header-height: 50px; /* Reduced header height */
+    --base-padding: 16px;
+    --element-spacing: 12px;
+    --border-radius: 4px;
+
+    /* --- Typography --- */
+    --font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    --monospace-font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    --font-size-base: 14px;
+    --font-size-sm: 12px;
+    --font-size-lg: 16px;
+}
+
+body {
+    font-family: var(--font-family);
+    font-size: var(--font-size-base);
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg-color);
+    color: var(--primary-text-color);
+    min-height: 100vh;
+}
+
+/* Main application layout */
+#app-container {
+    display: flex;
+    height: 100vh;
+}
+
+#sidebar {
+    width: var(--sidebar-width);
+    background-color: var(--sidebar-bg);
+    border-right: 1px solid var(--border-color);
+    padding: var(--base-padding);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+#sidebar h2 {
+    margin-top: 0;
+    margin-bottom: var(--base-padding);
+    padding-bottom: var(--element-spacing);
+    border-bottom: 1px solid var(--border-color);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--secondary-text-color);
+}
+
+#note-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 var(--base-padding) 0; /* Add margin at bottom */
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+#note-list li {
+    padding: 8px var(--element-spacing);
+    margin-bottom: 4px;
+    cursor: pointer;
+    border-radius: var(--border-radius);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: var(--font-size-sm);
+    color: var(--secondary-text-color);
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+#note-list li:hover {
+    background-color: var(--note-list-item-hover-bg);
+    color: var(--primary-text-color);
+}
+
+#note-list li.active {
+    background-color: var(--note-list-item-active-bg);
+    color: var(--note-list-item-active-text);
+    font-weight: 500;
+}
+
+/* General button styling */
+button {
+    padding: 8px var(--element-spacing);
+    cursor: pointer;
+    background-color: var(--button-bg-color);
+    color: var(--button-text-color);
+    border: 1px solid transparent; /* Add border for consistency on focus */
+    border-radius: var(--border-radius);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+button:hover:not(:disabled) {
+    background-color: var(--button-hover-bg-color);
+}
+
+button:focus-visible {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(var(--accent-color), 0.3);
+}
+
+button:disabled {
+    background-color: var(--button-disabled-bg-color);
+    color: var(--button-disabled-text-color);
+    cursor: not-allowed;
+}
+
+/* Specific buttons */
+#new-note-btn {
+    width: 100%;
+    margin-top: auto; /* Push to bottom */
+    background-color: var(--accent-color);
+    color: #fff;
+}
+
+#new-note-btn:hover {
+    background-color: var(--accent-hover-color);
+}
+
+#main-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow-y: hidden;
+}
+
+header {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    padding: 0 var(--base-padding);
+    height: var(--header-height);
+    box-sizing: border-box;
+    flex-shrink: 0; /* Prevent header from shrinking */
+}
+
+#main-header-buttons button {
+    margin-left: var(--element-spacing);
+}
+
+main {
+    flex-grow: 1;
+    padding: var(--base-padding);
+    overflow-y: auto;
+    background-color: var(--bg-color); /* Ensure main area bg */
+}
+
+h3 {
+    color: var(--primary-text-color); /* Make H3 more prominent */
+    margin-top: var(--base-padding);
+    margin-bottom: var(--element-spacing);
+    font-size: var(--font-size-base);
+    font-weight: 600;
+}
+
+#notes-area textarea {
+    width: 100%;
+    height: calc(100vh - var(--header-height) - 300px); /* Adjust height dynamically based on viewport and other elements */
+    min-height: 150px;
+    box-sizing: border-box;
+    margin-top: var(--element-spacing);
+    padding: var(--element-spacing);
+    border: 1px solid var(--input-border-color);
+    border-radius: var(--border-radius);
+    background-color: var(--input-bg-color);
+    color: var(--input-text-color);
+    font-family: var(--monospace-font-family);
+    font-size: var(--font-size-base);
+    resize: vertical;
+    transition: border-color 0.15s ease;
+}
+
+#notes-area textarea:focus {
+    outline: none;
+    border-color: var(--input-focus-border-color);
+    box-shadow: 0 0 0 1px var(--input-focus-border-color);
+}
+
+#controls, #ai-actions {
+    margin-top: var(--base-padding);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--element-spacing);
+}
+
+#ai-actions h3 {
+     margin: 0 0 var(--element-spacing) 0; /* Reset margin */
+     width: 100%; /* Make h3 take full width */
+     padding-bottom: var(--element-spacing);
+     border-bottom: 1px solid var(--border-color);
+}
+
+/* Settings page adjustments remain similar */
+.settings-form .container {
+     margin: 40px auto;
+     padding: calc(var(--base-padding) * 1.5);
+     max-width: 600px;
+     background-color: var(--sidebar-bg); /* Use sidebar bg for contrast */
+     border: 1px solid var(--border-color);
+     border-radius: var(--border-radius);
+     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.settings-form header h1 {
+     font-size: var(--font-size-lg);
+     color: var(--primary-text-color);
+     margin-bottom: var(--base-padding);
+}
+
+.settings-form label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--secondary-text-color);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+}
+
+.settings-form input[type="text"],
+.settings-form input[type="password"] {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px var(--element-spacing);
+    margin-bottom: var(--base-padding);
+    border: 1px solid var(--input-border-color);
+    border-radius: var(--border-radius);
+    background-color: var(--input-bg-color);
+    color: var(--input-text-color);
+    font-size: var(--font-size-base);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.settings-form input:focus {
+    outline: none;
+    border-color: var(--input-focus-border-color);
+    box-shadow: 0 0 0 2px rgba(var(--accent-color), 0.3);
+}
+
+.settings-form button#save-settings-btn {
+    margin-top: var(--element-spacing);
+    width: 100%;
+    background-color: var(--accent-color);
+    color: #fff;
+}
+
+.settings-form button#save-settings-btn:hover {
+     background-color: var(--accent-hover-color);
+} 

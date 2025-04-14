@@ -1,0 +1,17 @@
+# Node dependencies
+node_modules/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Optional editor directories
+.idea/
+.vscode/
+*.code-workspace
+
+# Optional OS generated files
+.DS_Store
+Thumbs.db 

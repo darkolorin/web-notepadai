@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Notepad AI</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app-container">
+        <aside id="sidebar">
+            <h2>Notes</h2>
+            <ul id="note-list">
+                <!-- Saved notes will be listed here -->
+            </ul>
+             <button id="new-note-btn">New Note</button>
+        </aside>
+
+        <div id="main-content">
+            <header>
+                <!-- Maybe add note title display here later -->
+                 <div id="main-header-buttons">
+                    <button id="save-note-btn">Save Note</button>
+                    <button id="settings-btn">Settings</button>
+                 </div>
+            </header>
+            <main>
+                <div id="notes-area">
+                    <!-- Optional: Add an input for title -->
+                    <!-- <input type="text" id="note-title" placeholder="Note Title"> -->
+                    <textarea id="note-content" placeholder="Start dictating or typing..."></textarea>
+                </div>
+                <div id="controls">
+                    <button id="dictate-btn">Start Dictation</button>
+                </div>
+                <div id="ai-actions">
+                    <h3>AI Actions</h3>
+                    <button id="summarize-btn" disabled>Summarize</button>
+                    <button id="explore-btn" disabled>Explore Ideas</button>
+                    <button id="pitch-btn" disabled>Make a Pitch</button>
+                </div>
+            </main>
+        </div>
+    </div>
+    <!-- Keep script tag at the end -->
+    <script src="renderer.js"></script>
+</body>
+</html> 
