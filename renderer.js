@@ -279,7 +279,7 @@ async function callOpenAI(prompt, buttonElement) {
 summarizeBtn.addEventListener('click', () => {
     const text = noteContent.value.trim();
     if (text) {
-        const prompt = `Please summarize the following text:
+        const prompt = `Please respond in the same language as the following text. Summarize the following text:
 \n${text}`;
         callOpenAI(prompt, summarizeBtn);
     } else {
@@ -290,7 +290,7 @@ summarizeBtn.addEventListener('click', () => {
 exploreBtn.addEventListener('click', () => {
     const text = noteContent.value.trim();
     if (text) {
-        const prompt = `Based on the following text, suggest 3 related ideas or directions to explore further:\n\n${text}`;
+        const prompt = `Please respond in the same language as the following text. Based on the following text, suggest 3 related ideas or directions to explore further:\n\n${text}`;
         callOpenAI(prompt, exploreBtn);
     } else {
         alert('Nothing to explore.');
@@ -300,8 +300,8 @@ exploreBtn.addEventListener('click', () => {
 pitchBtn.addEventListener('click', () => {
     const text = noteContent.value.trim();
     if (text) {
-        const userName = localStorage.getItem('userName') || 'I'; // Use saved name or default
-        const prompt = `Turn the following notes from ${userName} into a brief, compelling pitch or elevator statement:\n\n${text}`;
+        const userName = localStorage.getItem('userName') || 'I';
+        const prompt = `Please respond in the same language as the following text. Turn the following notes from ${userName} into a brief, compelling pitch or elevator statement:\n\n${text}`;
         callOpenAI(prompt, pitchBtn);
     } else {
         alert('Nothing to make a pitch from.');
@@ -439,8 +439,9 @@ newNoteBtn.addEventListener('click', startNewNote);
 summarizeBtn.addEventListener('click', () => {
     const text = noteContent.value.trim();
     if (text) {
-        const prompt = `Please summarize the following text:\n\n${text}`;
-        callOpenAI(prompt, summarizeBtn); // Existing function
+        const prompt = `Please respond in the same language as the following text. Summarize the following text:
+\n${text}`;
+        callOpenAI(prompt, summarizeBtn);
     } else {
         alert('Nothing to summarize.');
     }
@@ -449,8 +450,8 @@ summarizeBtn.addEventListener('click', () => {
 exploreBtn.addEventListener('click', () => {
     const text = noteContent.value.trim();
     if (text) {
-        const prompt = `Based on the following text, suggest 3 related ideas or directions to explore further:\n\n${text}`;
-        callOpenAI(prompt, exploreBtn); // Existing function
+        const prompt = `Please respond in the same language as the following text. Based on the following text, suggest 3 related ideas or directions to explore further:\n\n${text}`;
+        callOpenAI(prompt, exploreBtn);
     } else {
         alert('Nothing to explore.');
     }
@@ -460,8 +461,8 @@ pitchBtn.addEventListener('click', () => {
     const text = noteContent.value.trim();
     if (text) {
         const userName = localStorage.getItem('userName') || 'I';
-        const prompt = `Turn the following notes from ${userName} into a brief, compelling pitch or elevator statement:\n\n${text}`;
-        callOpenAI(prompt, pitchBtn); // Existing function
+        const prompt = `Please respond in the same language as the following text. Turn the following notes from ${userName} into a brief, compelling pitch or elevator statement:\n\n${text}`;
+        callOpenAI(prompt, pitchBtn);
     } else {
         alert('Nothing to make a pitch from.');
     }
@@ -539,7 +540,7 @@ async function executeContextualAction() {
         return;
     }
 
-    const prompt = `Perform the following action: "${actionPhrase}" on the text below. Append the result clearly labeled under a heading like "--- ${actionPhrase} Result ---".
+    const prompt = `Perform the following action: "${actionPhrase}" on the text below. Respond in the same language as the original text. Append the result clearly labeled under a heading like "--- ${actionPhrase} Result ---".
 
 Text:
 "${text}"`;
