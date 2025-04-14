@@ -65,6 +65,7 @@ body {
     display: flex;
     flex-direction: column;
     overflow-y: auto;
+    transition: width 0.3s ease; /* Add transition for potential future collapse */
 }
 
 #sidebar h2 {
@@ -192,7 +193,7 @@ h3 {
 
 #notes-area textarea {
     width: 100%;
-    height: calc(100vh - var(--header-height) - 300px); /* Adjust height dynamically based on viewport and other elements */
+    height: 250px; /* Default height */
     min-height: 150px;
     box-sizing: border-box;
     margin-top: var(--element-spacing);
@@ -281,4 +282,111 @@ h3 {
 
 .settings-form button#save-settings-btn:hover {
      background-color: var(--accent-hover-color);
+}
+
+/* --- Responsive Adjustments --- */
+
+/* Medium screens (Tablets, smaller laptops) */
+@media (max-width: 992px) {
+    :root {
+         --sidebar-width: 200px; /* Slightly narrower sidebar */
+    }
+
+    #notes-area textarea {
+         height: 200px; /* Slightly smaller text area */
+    }
+}
+
+/* Small screens (Tablets portrait, Phones landscape) */
+@media (max-width: 768px) {
+    :root {
+        --font-size-base: 13px; /* Slightly smaller base font */
+        --font-size-sm: 11px;
+        --base-padding: 12px;
+        --element-spacing: 8px;
+    }
+
+    #app-container {
+        flex-direction: column; /* Stack sidebar and main */
+        height: auto; /* Allow content to determine height */
+        min-height: 100vh;
+    }
+
+    #sidebar {
+        width: 100%; /* Full width when stacked */
+        height: auto; /* Adjust height automatically */
+        max-height: 40vh; /* Limit sidebar height */
+        border-right: none; /* Remove side border */
+        border-bottom: 1px solid var(--border-color); /* Add bottom border */
+        overflow-y: auto; /* Ensure scrolling if needed */
+    }
+
+    #sidebar h2 {
+        margin-bottom: var(--element-spacing);
+        padding-bottom: var(--element-spacing);
+    }
+
+    #new-note-btn {
+        margin-top: var(--base-padding); /* Adjust margin */
+    }
+
+    #main-content {
+        height: auto; /* Adjust height */
+        overflow-y: visible; /* Allow main content to scroll with page */
+    }
+
+    header {
+        height: auto; /* Auto height for header */
+        min-height: var(--header-height);
+        padding-top: var(--element-spacing);
+        padding-bottom: var(--element-spacing);
+    }
+
+    main {
+         padding-top: var(--element-spacing); /* Reduce top padding */
+    }
+
+     #notes-area textarea {
+         height: 200px; /* Adjust height */
+         font-size: var(--font-size-base); /* Ensure readable font size */
+     }
+
+    #controls, #ai-actions {
+        flex-direction: column; /* Stack control buttons */
+        align-items: stretch; /* Make buttons full width */
+    }
+
+    #ai-actions h3 {
+        margin-bottom: var(--element-spacing);
+        text-align: center;
+    }
+
+    button {
+        width: 100%; /* Make buttons take full width in controls/actions */
+        box-sizing: border-box;
+    }
+
+    #main-header-buttons button {
+        width: auto; /* Keep header buttons normal size */
+        padding: 6px 10px; /* Slightly smaller header buttons */
+    }
+
+    /* Adjust settings page container padding on mobile */
+    .settings-form .container {
+        padding: var(--base-padding);
+        margin: 20px; /* Add some margin */
+    }
+}
+
+/* Very small screens (Phones portrait) */
+@media (max-width: 480px) {
+     :root {
+         --font-size-base: 12px;
+     }
+     #sidebar {
+        max-height: 35vh; /* Further limit sidebar height */
+     }
+     #notes-area textarea {
+         height: 150px; /* Smaller text area */
+     }
 } 
