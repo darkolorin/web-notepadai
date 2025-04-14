@@ -7,11 +7,15 @@ const noteContent = document.getElementById('note-content');
 const noteList = document.getElementById('note-list');
 const newNoteBtn = document.getElementById('new-note-btn');
 const saveNoteBtn = document.getElementById('save-note-btn');
+const contextualActionContainer = document.getElementById('contextual-action-container');
+const contextualActionBtn = document.getElementById('contextual-action-btn');
 // const noteTitleInput = document.getElementById('note-title'); // If using title input
 
 // --- State --- 
 let currentNoteId = null;
 let notes = []; // In-memory store of notes
+let suggestionTimeout = null;
+const SUGGESTION_DEBOUNCE_DELAY = 1500; // milliseconds (1.5 seconds)
 
 // --- MediaRecorder and Whisper Integration ---
 let mediaRecorder;
@@ -23,53 +27,86 @@ async function startRecording() {
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-        let options = { mimeType: 'audio/wav' };
-        try {
-            // Attempt 1: WAV
-            mediaRecorder = new MediaRecorder(stream, options);
-            console.log('Using mimeType:', options.mimeType);
-        } catch (e1) {
-            console.warn(`mimeType ${options.mimeType} not supported. Trying Ogg/Opus...`);
-            options = { mimeType: 'audio/ogg; codecs=opus' };
-            try {
-                 // Attempt 2: Ogg/Opus
-                mediaRecorder = new MediaRecorder(stream, options);
-                console.log('Using mimeType:', options.mimeType);
-            } catch (e2) {
-                console.warn(`mimeType ${options.mimeType} not supported. Falling back to default.`);
-                 // Attempt 3: Default
-                mediaRecorder = new MediaRecorder(stream);
-                console.log('Using default mimeType:', mediaRecorder.mimeType);
+        // Prioritize iOS/Safari compatible types first
+        const mimeTypesToTry = [
+            'audio/mp4', // Preferred by Safari/iOS
+            'audio/aac', // Alternative AAC container
+            'audio/wav',
+            'audio/ogg; codecs=opus',
+            // Add 'audio/webm; codecs=opus'? Sometimes works better than default webm
+            'audio/webm' // Common default, but check if Whisper likes the codec
+        ];
+
+        let supportedMimeType = '';
+        for (const mimeType of mimeTypesToTry) {
+            if (MediaRecorder.isTypeSupported(mimeType)) {
+                supportedMimeType = mimeType;
+                break;
             }
         }
+
+        if (!supportedMimeType) {
+            // If none of the specific types are supported, try with no options (browser default)
+            console.warn('None of the preferred mimeTypes are supported. Falling back to browser default.');
+            mediaRecorder = new MediaRecorder(stream);
+        } else {
+            const options = { mimeType: supportedMimeType };
+            try {
+                mediaRecorder = new MediaRecorder(stream, options);
+                console.log('Using mimeType:', supportedMimeType);
+            } catch (e) {
+                console.warn(`Error initializing MediaRecorder with ${supportedMimeType}. Falling back to default.`, e);
+                mediaRecorder = new MediaRecorder(stream); // Fallback on error
+            }
+        }
+
+        console.log('Actual mimeType being used:', mediaRecorder.mimeType);
 
         audioChunks = []; // Reset chunks
 
         mediaRecorder.ondataavailable = event => {
-            audioChunks.push(event.data);
+            if (event.data.size > 0) {
+                 audioChunks.push(event.data);
+            }
         };
 
         mediaRecorder.onstop = async () => {
-            const mimeType = mediaRecorder.mimeType || 'audio/wav'; // Prioritize actual, fallback to wav
+            if (audioChunks.length === 0) {
+                console.warn("No audio chunks recorded.");
+                 // Reset UI properly if no audio was captured
+                 isRecording = false;
+                 dictateBtn.textContent = 'Start Dictation';
+                 dictateBtn.disabled = false;
+                return; // Don't proceed if no data
+            }
+
+            const mimeType = mediaRecorder.mimeType || 'audio/mp4'; // Get actual type, fallback to mp4
             let fileExtension = 'bin'; // Default extension
-            if (mimeType.includes('wav')) {
+
+            // Map mime type to common extensions Whisper might support
+            if (mimeType.includes('mp4') || mimeType.includes('m4a') || mimeType.includes('aac')) {
+                fileExtension = 'm4a'; // Whisper supports m4a
+            } else if (mimeType.includes('wav')) {
                 fileExtension = 'wav';
             } else if (mimeType.includes('ogg')) {
                 fileExtension = 'ogg';
             } else if (mimeType.includes('webm')) {
                 fileExtension = 'webm';
+            } else if (mimeType.includes('mpeg') || mimeType.includes('mp3')) {
+                 fileExtension = 'mp3'; // Whisper supports mp3
             }
-            // Add more types if needed (mp3, mp4, etc.)
 
             const fileName = `recording.${fileExtension}`;
             console.log(`Creating Blob with type: ${mimeType}, filename: ${fileName}`);
 
             const audioBlob = new Blob(audioChunks, { type: mimeType });
-            // Stop the tracks
+
+            // Stop the tracks *after* blob creation
             stream.getTracks().forEach(track => track.stop());
-            // Send to Whisper API
-            await transcribeAudio(audioBlob, dictateBtn, fileName); // Pass filename
-            // Reset UI after transcription attempt
+
+            await transcribeAudio(audioBlob, dictateBtn, fileName);
+
+            // Reset UI (already happens in transcribeAudio finally block, but belt-and-suspenders)
             isRecording = false;
             dictateBtn.textContent = 'Start Dictation';
             dictateBtn.disabled = false;
@@ -78,12 +115,12 @@ async function startRecording() {
         mediaRecorder.start();
         isRecording = true;
         dictateBtn.textContent = 'Stop Dictation';
-        dictateBtn.disabled = false; // Ensure it's enabled
+        dictateBtn.disabled = false;
         console.log('Recording started...');
 
     } catch (err) {
-        console.error('Error accessing microphone:', err);
-        alert('Could not access microphone. Please ensure permission is granted.');
+        console.error('Error accessing microphone or starting recording:', err);
+        alert('Could not access microphone or start recording. Please ensure permission is granted.');
         isRecording = false; // Reset state
         dictateBtn.textContent = 'Start Dictation';
         dictateBtn.disabled = false;
@@ -331,13 +368,15 @@ function loadNote(noteId) {
     if (noteToLoad) {
         currentNoteId = noteId;
         noteContent.value = noteToLoad.content;
-        // Update active state in sidebar
         renderNoteList();
-        checkTextArea(); // Update AI button state
+        checkTextArea();
         console.log(`Loaded note: ${noteToLoad.title} (ID: ${noteId})`);
+        // Trigger suggestion check after loading a note
+        clearTimeout(suggestionTimeout); // Clear any pending from previous note
+        getSuggestedAction(noteToLoad.content.trim()); // Check immediately on load
     } else {
         console.error('Note not found:', noteId);
-        startNewNote(); // Fallback to a new note if ID is invalid
+        startNewNote();
     }
 }
 
@@ -387,6 +426,8 @@ function startNewNote() {
     checkTextArea(); // Update AI buttons
     noteContent.focus();
     console.log('Started new note');
+    contextualActionContainer.style.display = 'none'; // Hide for new notes
+    clearTimeout(suggestionTimeout); // Clear any pending suggestion checks
 }
 
 // --- Event Listeners --- 
@@ -426,6 +467,106 @@ pitchBtn.addEventListener('click', () => {
     }
 });
 
+// --- Contextual Action Logic ---
+
+async function getSuggestedAction(text) {
+    if (!text || text.length < 50) { // Only suggest for longer texts
+        contextualActionContainer.style.display = 'none';
+        return;
+    }
+
+    const apiKey = getApiKey();
+    if (!apiKey) return; // Stop if no key
+
+    const prompt = `Given the following text, suggest ONE concise, actionable phrase (max 4 words, e.g., "Create Task List", "Draft Email Reply", "Find Synonyms", "Check Grammar") that could be performed on this text. Output ONLY the phrase.
+
+Text:
+"${text}"
+
+Suggested action phrase:`;
+
+    try {
+        // Use a separate, silent fetch - don't show loading on the main button
+        const response = await fetch(OPENAI_API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`
+            },
+            body: JSON.stringify({
+                model: 'gpt-3.5-turbo', // Use a fast model
+                messages: [
+                    { role: 'system', content: 'You suggest short, actionable phrases based on input text.' },
+                    { role: 'user', content: prompt }
+                ],
+                max_tokens: 15,
+                temperature: 0.5 // Lower temperature for more predictable suggestions
+            })
+        });
+
+        if (!response.ok) {
+             console.warn('Failed to get suggested action:', response.status);
+            contextualActionContainer.style.display = 'none';
+            return;
+        }
+
+        const data = await response.json();
+        let suggestedPhrase = data.choices[0]?.message?.content.trim().replace(/"/g, ''); // Remove quotes
+
+        // Basic validation
+        if (suggestedPhrase && suggestedPhrase.length > 0 && suggestedPhrase.length < 30) {
+            contextualActionBtn.textContent = suggestedPhrase;
+            contextualActionBtn.dataset.actionPhrase = suggestedPhrase; // Store for execution
+            contextualActionContainer.style.display = 'block'; // Show the button
+            console.log('Suggested action:', suggestedPhrase);
+        } else {
+            console.warn('Invalid or empty suggestion received:', suggestedPhrase);
+            contextualActionContainer.style.display = 'none';
+        }
+
+    } catch (error) {
+        console.error('Error getting suggested action:', error);
+        contextualActionContainer.style.display = 'none'; // Hide on error
+    }
+}
+
+async function executeContextualAction() {
+    const actionPhrase = contextualActionBtn.dataset.actionPhrase;
+    const text = noteContent.value.trim();
+
+    if (!actionPhrase || !text) {
+        alert("Cannot execute action: Missing context or text.");
+        return;
+    }
+
+    const prompt = `Perform the following action: "${actionPhrase}" on the text below. Append the result clearly labeled under a heading like "--- ${actionPhrase} Result ---".
+
+Text:
+"${text}"`;
+
+    // Use the existing callOpenAI, passing the contextual button
+    callOpenAI(prompt, contextualActionBtn);
+}
+
+// Debounced check for suggestions on text input
+noteContent.addEventListener('input', () => {
+    checkTextArea(); // Update standard AI buttons immediately
+
+    // Debounce suggestion fetching
+    clearTimeout(suggestionTimeout);
+    const currentText = noteContent.value.trim();
+    if (currentText.length >= 50) { // Only schedule if text is long enough
+        suggestionTimeout = setTimeout(() => {
+            getSuggestedAction(currentText);
+        }, SUGGESTION_DEBOUNCE_DELAY);
+    } else {
+         contextualActionContainer.style.display = 'none'; // Hide if text becomes too short
+    }
+});
+
+// Listener for the contextual action button
+contextualActionBtn.addEventListener('click', executeContextualAction);
+
 // --- Initialization --- 
 
 // Load notes and display
@@ -436,4 +577,6 @@ if (notes.length > 0) {
     loadNote(notes[0].id);
 } else {
     startNewNote();
-} 
+}
+
+contextualActionContainer.style.display = 'none'; // Ensure hidden on load 

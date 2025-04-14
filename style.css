@@ -228,6 +228,43 @@ h3 {
      border-bottom: 1px solid var(--border-color);
 }
 
+/* Style for the new contextual button */
+#contextual-action-container {
+    width: 100%; /* Or adjust as needed */
+}
+
+#contextual-action-btn {
+    /* Similar to other buttons, maybe slightly different style? */
+    background-color: var(--accent-color); /* Use accent color */
+    color: #fff;
+    width: auto; /* Let content determine width initially */
+    display: inline-block; /* Allow centering if container uses text-align */
+    /* Remove full width from mobile */
+    width: auto !important;
+}
+
+#contextual-action-btn:hover {
+     background-color: var(--accent-hover-color);
+}
+
+/* Ensure mobile stacking doesn't force this button full width */
+@media (max-width: 768px) {
+    #contextual-action-container {
+        text-align: center; /* Center the button */
+    }
+    #contextual-action-btn {
+        /* Reset width if needed, though inline-block might suffice */
+         width: auto;
+         padding: 10px 20px; /* More padding for touch */
+    }
+
+    #controls button,
+    #ai-actions button {
+        width: 100%; /* Make *other* buttons take full width in controls/actions */
+        box-sizing: border-box;
+    }
+}
+
 /* Settings page adjustments remain similar */
 .settings-form .container {
      margin: 40px auto;
